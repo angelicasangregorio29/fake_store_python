@@ -109,41 +109,124 @@ def product_model(product: dict[str, any]) -> dict[str, any]:
         error_msg = f"Errore nella validazione del prodotto: {e}"
         logger.error(error_msg)
         raise
+
+
+def get_all_products() -> list[dict[str, any]]:
+    """Recupera la lista completa dei prodotti dall'API"""
+    try:
+        logger.info("Recupero della lista completa dei prodotti")
+        products = get_data(BASE_URL)
+        
+        if not isinstance(products, list):
+            raise ValueError("Risposta API non è una lista")
+        
+        if not products:
+            raise ValueError("Nessun prodotto disponibile")
+        
+        logger.info(f"Recuperati {len(products)} prodotti")
+        return products
     
+    except ValueError as e:
+        if "prodotto" in str(e).lower():
+            raise
+        error_msg = f"Errore nel recupero della lista: {e}"
+        logger.error(error_msg)
+        raise ValueError(error_msg) from e
+
+
+def print_lista_prodotti(products: list[dict[str, any]]) -> None:
+    """Stampa la lista dei prodotti in formato tabellare"""
+    try:
+        print("\n" + "=" * 80)
+        print(f"{'ID':<5} {'TITOLO':<40} {'CATEGORIA':<15} {'PREZZO':<10}")
+        print("=" * 80)
+        
+        for product in products:
+            try:
+                product_data = product_model(product)
+                title = product_data["title"][:37] + "..." if len(product_data["title"]) > 40 else product_data["title"]
+                print(f"{product_data['id']:<5} {title:<40} {product_data['category']:<15} €{product_data['price']:<9.2f}")
+            except ValueError:
+                logger.warning(f"Prodotto non valido, saltato: ID {product.get('id', 'N/A')}")
+                continue
+        
+        print("=" * 80 + "\n")
+    
+    except Exception as e:
+        error_msg = f"Errore nella stampa della lista: {e}"
+        logger.error(error_msg)
+        raise ValueError(error_msg) from e
+
+
+def menu_principale() -> str:
+    """Mostra il menu principale e restituisce la scelta dell'utente"""
+    print("\n" + "=" * 40)
+    print("🛍️  FAKE STORE - MENU PRINCIPALE")
+    print("=" * 40)
+    print("1. Visualizza lista completa prodotti")
+    print("2. Cerca un prodotto per ID")
+    print("3. Esci")
+    print("=" * 40)
+    
+    choice = input("Seleziona un'opzione (1-3): ").strip()
+    return choice
+
 
 def main() -> None:
     """Funzione principale con gestione errori robusta"""
-    try: 
-        user_input = input("Inserisci l'id del prodotto da visualizzare: ").strip()
+    while True:
+        try:
+            choice = menu_principale()
+            
+            if choice == "1":
+                # Visualizza lista completa
+                logger.info("Utente ha scelto: visualizza lista completa")
+                products = get_all_products()
+                print_lista_prodotti(products)
+            
+            elif choice == "2":
+                # Cerca un prodotto per ID
+                logger.info("Utente ha scelto: cerca per ID")
+                user_input = input("Inserisci l'id del prodotto da visualizzare: ").strip()
+                
+                # Validazione input
+                if not user_input:
+                    raise ValueError("ID non può essere vuoto")
+                
+                if not user_input.isdigit():
+                    raise ValueError("L'ID deve essere un numero intero")
+                
+                logger.info(f"Richiesta per il prodotto ID: {user_input}")
+                
+                product = product_model(get_data(f"{BASE_URL}/{user_input}"))
+                print()
+                print_prodotto(product)
+                logger.info("Prodotto visualizzato con successo")
+            
+            elif choice == "3":
+                print("\n👋 Arrivederci!\n")
+                logger.info("Utente ha chiuso l'applicazione")
+                break
+            
+            else:
+                print("❌ Opzione non valida. Seleziona 1, 2 o 3.\n")
+                logger.warning(f"Opzione non valida selezionata: {choice}")
         
-        # Validazione input
-        if not user_input:
-            raise ValueError("ID non può essere vuoto")
+        except ValueError as e:
+            print(f"❌ Errore di validazione: {e}")
+            logger.warning(f"Errore di validazione: {e}")
         
-        if not user_input.isdigit():
-            raise ValueError("L'ID deve essere un numero intero")
+        except KeyError as e:
+            print(f"❌ Errore nei dati: Campo {e} non trovato")
+            logger.error(f"Campo mancante: {e}")
         
-        logger.info(f"Richiesta per il prodotto ID: {user_input}")
+        except (ConnectionError, TimeoutError):
+            print("❌ Errore di connessione: Controllare la connessione internet")
+            logger.error("Errore di connessione all'API")
         
-        product = product_model(get_data(f"{BASE_URL}/{user_input}"))
-        print_prodotto(product)
-        logger.info("Prodotto visualizzato con successo")
-    
-    except ValueError as e:
-        print(f"❌ Errore di validazione: {e}")
-        logger.warning(f"Errore di validazione: {e}")
-    
-    except KeyError as e:
-        print(f"❌ Errore nei dati: Campo {e} non trovato")
-        logger.error(f"Campo mancante: {e}")
-    
-    except (ConnectionError, TimeoutError):
-        print("❌ Errore di connessione: Controllare la connessione internet")
-        logger.error("Errore di connessione all'API")
-    
-    except Exception as e:
-        print(f"❌ Errore inaspettato: {type(e).__name__} - {e}")
-        logger.critical(f"Errore inaspettato: {type(e).__name__} - {e}")
+        except Exception as e:
+            print(f"❌ Errore inaspettato: {type(e).__name__} - {e}")
+            logger.critical(f"Errore inaspettato: {type(e).__name__} - {e}")
 
     
 
