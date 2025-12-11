@@ -58,16 +58,39 @@ def get_data(URL: str) -> dict[str, any] | list[dict[str, any]]:
 
 
 def print_prodotto(product: dict[str, any]) -> None:
-    """Stampa i dettagli del prodotto"""
+    """Stampa i dettagli del prodotto in formato professionale"""
     try:
-        print("*" * 30)
-        print("PRODOTTO")
-        print("*" * 30)
-        print(f"ID: {product['id']}")
-        print(f"Titolo: {product['title']}")
-        print(f"Category: {product['category']}")
-        print(f"PRICE: {product['price']}")
-        print(f"DESCRIPTION: {product['description']}")
+        print("\n" + "=" * 80)
+        print(f"{'DETTAGLI PRODOTTO':^80}")
+        print("=" * 80)
+        
+        print(f"\n🆔  ID: {product['id']}")
+        print("\n📦 TITOLO:")
+        print(f"   {product['title']}")
+        
+        print(f"\n🏷️  CATEGORIA: {product['category']}")
+        
+        print(f"\n💰 PREZZO: €{product['price']:.2f}")
+        
+        print("\n📝 DESCRIZIONE:")
+        # Stampa la descrizione con word wrap
+        description = product['description']
+        max_width = 76
+        words = description.split()
+        current_line = "   "
+        
+        for word in words:
+            if len(current_line) + len(word) + 1 <= max_width:
+                current_line += word + " "
+            else:
+                print(current_line)
+                current_line = "   " + word + " "
+        
+        if current_line.strip() != "":
+            print(current_line)
+        
+        print("\n" + "=" * 80 + "\n")
+        
     except KeyError as e:
         error_msg = f"Errore: Campo mancante nel prodotto - {e}"
         logger.error(error_msg)
