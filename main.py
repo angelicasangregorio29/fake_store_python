@@ -135,22 +135,25 @@ def get_all_products() -> list[dict[str, any]]:
 
 
 def print_lista_prodotti(products: list[dict[str, any]]) -> None:
-    """Stampa la lista dei prodotti in formato tabellare"""
+    """Stampa la lista dei prodotti mostrando solo ID e titolo"""
     try:
         print("\n" + "=" * 80)
-        print(f"{'ID':<5} {'TITOLO':<40} {'CATEGORIA':<15} {'PREZZO':<10}")
+        print(f"{'ID':<5} {'TITOLO':<75}")
         print("=" * 80)
         
-        for product in products:
+        for idx, product in enumerate(products, 1):
             try:
                 product_data = product_model(product)
-                title = product_data["title"][:37] + "..." if len(product_data["title"]) > 40 else product_data["title"]
-                print(f"{product_data['id']:<5} {title:<40} {product_data['category']:<15} €{product_data['price']:<9.2f}")
+                title = product_data["title"]
+                if len(title) > 75:
+                    title = title[:72] + "..."
+                print(f"{product_data['id']:<5} {title:<75}")
             except ValueError:
                 logger.warning(f"Prodotto non valido, saltato: ID {product.get('id', 'N/A')}")
                 continue
         
-        print("=" * 80 + "\n")
+        print("=" * 80)
+        print(f"Totale prodotti: {len(products)}\n")
     
     except Exception as e:
         error_msg = f"Errore nella stampa della lista: {e}"
