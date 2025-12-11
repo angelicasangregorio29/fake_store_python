@@ -186,6 +186,20 @@ def main() -> None:
                 logger.info("Utente ha scelto: visualizza lista completa")
                 products = get_all_products()
                 print_lista_prodotti(products)
+                
+                # Chiedi di visualizzare i dettagli di un prodotto
+                product_id = input("Inserisci l'ID di un prodotto per visualizzare i dettagli (o premi Invio per tornare al menu): ").strip()
+                
+                if product_id:
+                    if not product_id.isdigit():
+                        print("❌ L'ID deve essere un numero intero")
+                        logger.warning(f"ID non valido: {product_id}")
+                    else:
+                        logger.info(f"Richiesta dettagli prodotto ID: {product_id}")
+                        product = product_model(get_data(f"{BASE_URL}/{product_id}"))
+                        print()
+                        print_prodotto(product)
+                        logger.info("Prodotto visualizzato con successo")
             
             elif choice == "2":
                 # Cerca un prodotto per ID
